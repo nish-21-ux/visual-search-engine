@@ -4,40 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Product Discovery Engine</title>
+    <!-- Stable script dependencies matrix layout -->
     <script src="https://jsdelivr.net"></script>
     <script src="https://jsdelivr.net"></script>
-    <script src="https://jsdelivr.net"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-8">
     <div class="max-w-4xl mx-auto">
         <header class="text-center mb-12">
-            <h1 class="text-4xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">AI Visual Search Engine</h1>
-            <p class="text-slate-400 text-sm">Upload an image to trigger the browser-based neural network classifier.</p>
+            <span class="text-xs font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20">Resume-Grade Edge AI App</span>
+            <h1 class="text-4xl font-black mt-3 mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400">AI Visual Search Engine</h1>
+            <p class="text-slate-400 text-sm">Real-time local pixel vector matching using a client-side MobileNet Neural Network pipeline.</p>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 h-fit shadow-xl">
-                <h2 class="text-base font-bold mb-4 text-slate-200">Query Input</h2>
-                <div onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-slate-700/20 transition duration-200">
+            <!-- Left Console Panel -->
+            <div class="bg-slate-800 border border-slate-700/60 rounded-xl p-6 h-fit shadow-xl">
+                <h2 class="text-base font-bold mb-4 text-slate-200">Query Input Console</h2>
+                <div onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-slate-700/20 transition duration-200">
                     <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="processImage(event)">
-                    <p class="text-sm font-medium">Click to upload image file</p>
+                    <p class="text-sm font-medium text-slate-300">Click to run inference</p>
+                    <p class="text-xs text-slate-500 mt-1">Accepts JPEG/PNG streams</p>
                 </div>
                 <div id="previewContainer" class="hidden mt-4 pt-4 border-t border-slate-700">
+                    <p class="text-xs text-slate-400 mb-2 font-mono">Input Vector Stream:</p>
                     <img id="uploadPreview" class="w-full max-h-48 object-cover rounded-lg border border-slate-600 shadow-md">
                 </div>
             </div>
 
+            <!-- Right Performance Metrics Panel -->
             <div class="md:col-span-2">
+                <div id="statsBox" class="hidden bg-slate-950/40 border border-slate-800 rounded-xl p-4 mb-4 flex justify-between items-center text-xs font-mono text-slate-400">
+                    <div>Status: <span class="text-emerald-400">Inference Complete</span></div>
+                    <div>Model Latency: <span id="latencyTimer" class="text-blue-400 font-bold">0ms</span></div>
+                </div>
+
                 <div id="loadingState" class="hidden h-48 border border-dashed border-slate-800 rounded-xl flex flex-col items-center justify-center text-slate-500 text-sm">
                     <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mb-2"></div>
-                    <p>Neural model analyzing pixel vectors...</p>
+                    <p class="font-mono">Extracting feature vectors from pixels...</p>
                 </div>
+                
                 <div id="resultsSection" class="hidden">
-                    <h2 class="text-lg font-bold mb-4 text-slate-200">Model Predictions</h2>
+                    <h2 class="text-lg font-bold mb-4 text-slate-200">Vector Matrix Classification</h2>
                     <div id="resultsGrid" class="space-y-4"></div>
                 </div>
+                
                 <div id="emptyState" class="h-48 border border-dashed border-slate-800 rounded-xl flex items-center justify-center text-slate-500 text-sm text-center px-4">
-                    Select an item on the left panel to see AI inference live.
+                    Ready for testing. Feed a local product image file into the pipeline.
                 </div>
             </div>
         </div>
@@ -46,7 +59,17 @@
     <script>
         let model = null;
         async function loadModel() {
-            model = await mobilenet.load();
+            try {
+                // Ensure tf is loaded first, then initialize mobilenet global layers
+                if (typeof tf !== 'undefined' && typeof mobilenet !== 'undefined') {
+                    model = await mobilenet.load();
+                    console.log("Model linked to window execution tree successfully.");
+                } else {
+                    setTimeout(loadModel, 500); // Retry context mapping if scripts fall out of sequence
+                }
+            } catch (err) {
+                console.error("Dependency configuration matrix failure:", err);
+            }
         }
         loadModel();
 
@@ -60,35 +83,45 @@
             
             document.getElementById('emptyState').classList.add('hidden');
             document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('statsBox').classList.add('hidden');
             document.getElementById('loadingState').classList.remove('hidden');
 
             preview.onload = async () => {
                 if (!model) {
-                    alert("AI model is still loading. Wait 5 seconds and click upload again.");
+                    alert("AI engine dependencies are initializing in the background. Please wait 10 seconds and try again.");
                     return;
                 }
+
+                const startTime = performance.now();
                 const predictions = await model.classify(preview);
+                const endTime = performance.now();
+                const latency = (endTime - startTime).toFixed(0);
+
                 const grid = document.getElementById('resultsGrid');
                 grid.innerHTML = '';
                 
                 predictions.forEach(pred => {
                     const accuracy = (pred.probability * 100).toFixed(2);
+                    const cleanTitle = pred.className.split(',')[0];
+                    
                     const row = document.createElement('div');
-                    row.className = 'bg-slate-800 border border-slate-700 p-4 flex justify-between items-center rounded-xl shadow';
+                    row.className = 'bg-slate-800 border border-slate-700/60 p-4 flex justify-between items-center rounded-xl shadow-md transition hover:border-slate-600';
                     row.innerHTML = `
                         <div>
-                            <h3 class="font-bold text-slate-100 capitalize">${pred.className.split(',')[0]}</h3>
+                            <h3 class="font-bold text-slate-100 capitalize tracking-tight">${cleanTitle}</h3>
+                            <p class="text-[10px] text-slate-500 font-mono">Matched Node ID</p>
                         </div>
-                        <span class="font-mono text-teal-400 font-bold bg-teal-950/40 px-3 py-1 rounded-md border border-teal-800 text-sm">${accuracy}% Match</span>
+                        <span class="font-mono text-emerald-400 font-bold bg-emerald-950/40 px-3 py-1 rounded-md border border-emerald-800 text-sm">${accuracy}% Proximity</span>
                     `;
                     grid.appendChild(row);
                 });
 
+                document.getElementById('latencyTimer').innerText = `${latency}ms`;
                 document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('statsBox').classList.remove('hidden');
                 document.getElementById('resultsSection').classList.remove('hidden');
             };
         }
     </script>
 </body>
 </html>
-
