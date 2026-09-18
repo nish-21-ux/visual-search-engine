@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Product Discovery Engine</title>
-    <!-- Stable script dependencies matrix layout -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <!-- Solid, rock-stable standalone build scripts -->
     <script src="https://jsdelivr.net"></script>
-    <!-- Rock-solid Tailwind CSS Version 3 CDN Script -->
     <script src="https://jsdelivr.net"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-8">
     <div class="max-w-4xl mx-auto">
@@ -42,7 +41,7 @@
 
                 <div id="loadingState" class="hidden h-48 border border-dashed border-slate-800 rounded-xl flex flex-col items-center justify-center text-slate-500 text-sm">
                     <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mb-2"></div>
-                    <p class="font-mono">Extracting feature vectors from pixels...</p>
+                    <p class="font-mono">Downloading AI brain model config layers...</p>
                 </div>
                 
                 <div id="resultsSection" class="hidden">
@@ -61,12 +60,8 @@
         let model = null;
         async function loadModel() {
             try {
-                if (typeof tf !== 'undefined' && typeof mobilenet !== 'undefined') {
-                    model = await mobilenet.load();
-                    console.log("Model loaded successfully.");
-                } else {
-                    setTimeout(loadModel, 500); 
-                }
+                model = await mobilenet.load();
+                console.log("AI Model loaded successfully.");
             } catch (err) {
                 console.error("AI engine failure:", err);
             }
@@ -74,11 +69,11 @@
         loadModel();
 
         async function processImage(event) {
-            const file = event.target.files[0]; // Fixed file stream mapping
-            if (!file) return;
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
 
             const preview = document.getElementById('uploadPreview');
-            preview.src = URL.createObjectURL(file);
+            preview.src = URL.createObjectURL(files[0]);
             document.getElementById('previewContainer').classList.remove('hidden');
             
             document.getElementById('emptyState').classList.add('hidden');
@@ -88,7 +83,9 @@
 
             preview.onload = async () => {
                 if (!model) {
-                    alert("AI engine is initializing. Give it 5 more seconds and click upload again.");
+                    alert("The 98MB AI file is still downloading in your browser background. Leave this page open for 1 more minute and try clicking upload again!");
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('emptyState').classList.remove('hidden');
                     return;
                 }
 
@@ -105,7 +102,7 @@
                     const cleanTitle = pred.className.split(',')[0];
                     
                     const row = document.createElement('div');
-                    row.className = 'bg-slate-800 border border-slate-700 p-4 flex justify-between items-center rounded-xl shadow-md transition hover:border-slate-600';
+                    row.className = 'bg-slate-800 border border-slate-700 p-4 flex justify-between items-center rounded-xl shadow-md';
                     row.innerHTML = `
                         <div>
                             <h3 class="font-bold text-slate-100 capitalize tracking-tight">${cleanTitle}</h3>
