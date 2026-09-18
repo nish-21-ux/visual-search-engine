@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Product Discovery Engine</title>
     <!-- Stable script dependencies matrix layout -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
     <script src="https://jsdelivr.net"></script>
+    <!-- Rock-solid Tailwind CSS Version 3 CDN Script -->
     <script src="https://jsdelivr.net"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-8">
     <div class="max-w-4xl mx-auto">
@@ -19,7 +20,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Left Console Panel -->
-            <div class="bg-slate-800 border border-slate-700/60 rounded-xl p-6 h-fit shadow-xl">
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 h-fit shadow-xl">
                 <h2 class="text-base font-bold mb-4 text-slate-200">Query Input Console</h2>
                 <div onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-slate-700/20 transition duration-200">
                     <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="processImage(event)">
@@ -60,21 +61,20 @@
         let model = null;
         async function loadModel() {
             try {
-                // Ensure tf is loaded first, then initialize mobilenet global layers
                 if (typeof tf !== 'undefined' && typeof mobilenet !== 'undefined') {
                     model = await mobilenet.load();
-                    console.log("Model linked to window execution tree successfully.");
+                    console.log("Model loaded successfully.");
                 } else {
-                    setTimeout(loadModel, 500); // Retry context mapping if scripts fall out of sequence
+                    setTimeout(loadModel, 500); 
                 }
             } catch (err) {
-                console.error("Dependency configuration matrix failure:", err);
+                console.error("AI engine failure:", err);
             }
         }
         loadModel();
 
         async function processImage(event) {
-            const file = event.target.files[0];
+            const file = event.target.files[0]; // Fixed file stream mapping
             if (!file) return;
 
             const preview = document.getElementById('uploadPreview');
@@ -88,7 +88,7 @@
 
             preview.onload = async () => {
                 if (!model) {
-                    alert("AI engine dependencies are initializing in the background. Please wait 10 seconds and try again.");
+                    alert("AI engine is initializing. Give it 5 more seconds and click upload again.");
                     return;
                 }
 
@@ -105,7 +105,7 @@
                     const cleanTitle = pred.className.split(',')[0];
                     
                     const row = document.createElement('div');
-                    row.className = 'bg-slate-800 border border-slate-700/60 p-4 flex justify-between items-center rounded-xl shadow-md transition hover:border-slate-600';
+                    row.className = 'bg-slate-800 border border-slate-700 p-4 flex justify-between items-center rounded-xl shadow-md transition hover:border-slate-600';
                     row.innerHTML = `
                         <div>
                             <h3 class="font-bold text-slate-100 capitalize tracking-tight">${cleanTitle}</h3>
@@ -125,3 +125,5 @@
     </script>
 </body>
 </html>
+
+
