@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Product Discovery Engine</title>
-    <!-- Solid, rock-stable standalone build scripts -->
+    <!-- Lightweight production web framework configurations -->
     <script src="https://jsdelivr.net"></script>
     <script src="https://jsdelivr.net"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-8">
     <div class="max-w-4xl mx-auto">
@@ -18,21 +18,22 @@
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Left Console Panel -->
+            <!-- Input Control Section -->
             <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 h-fit shadow-xl">
                 <h2 class="text-base font-bold mb-4 text-slate-200">Query Input Console</h2>
                 <div onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-slate-700/20 transition duration-200">
                     <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="processImage(event)">
                     <p class="text-sm font-medium text-slate-300">Click to run inference</p>
-                    <p class="text-xs text-slate-500 mt-1">Accepts JPEG/PNG streams</p>
+                    <p class="text-xs text-slate-500 mt-1">Select an image file</p>
                 </div>
                 <div id="previewContainer" class="hidden mt-4 pt-4 border-t border-slate-700">
                     <p class="text-xs text-slate-400 mb-2 font-mono">Input Vector Stream:</p>
-                    <img id="uploadPreview" class="w-full max-h-48 object-cover rounded-lg border border-slate-600 shadow-md">
+                    <!-- added crossOrigin parameter to clear security isolation issues -->
+                    <img id="uploadPreview" crossOrigin="anonymous" class="w-full max-h-48 object-cover rounded-lg border border-slate-600 shadow-md">
                 </div>
             </div>
 
-            <!-- Right Performance Metrics Panel -->
+            <!-- Metrics & Output Cards Display Section -->
             <div class="md:col-span-2">
                 <div id="statsBox" class="hidden bg-slate-950/40 border border-slate-800 rounded-xl p-4 mb-4 flex justify-between items-center text-xs font-mono text-slate-400">
                     <div>Status: <span class="text-emerald-400">Inference Complete</span></div>
@@ -41,7 +42,7 @@
 
                 <div id="loadingState" class="hidden h-48 border border-dashed border-slate-800 rounded-xl flex flex-col items-center justify-center text-slate-500 text-sm">
                     <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mb-2"></div>
-                    <p class="font-mono">Downloading AI brain model config layers...</p>
+                    <p class="font-mono">Processing tensor vectors...</p>
                 </div>
                 
                 <div id="resultsSection" class="hidden">
@@ -58,65 +59,73 @@
 
     <script>
         let model = null;
-        async function loadModel() {
+
+        async function initApp() {
             try {
-                model = await mobilenet.load();
-                console.log("AI Model loaded successfully.");
+                // Initialize the lightweight model right away
+                model = await mobilenet.load({version: 1, alpha: 0.25});
+                console.log("AI environment loaded successfully.");
             } catch (err) {
-                console.error("AI engine failure:", err);
+                console.error("Initialization anomaly:", err);
             }
         }
-        loadModel();
+        initApp();
 
         async function processImage(event) {
             const files = event.target.files;
             if (!files || files.length === 0) return;
 
             const preview = document.getElementById('uploadPreview');
+            // Clean object string mapping streams
             preview.src = URL.createObjectURL(files[0]);
-            document.getElementById('previewContainer').classList.remove('hidden');
             
+            document.getElementById('previewContainer').classList.remove('hidden');
             document.getElementById('emptyState').classList.add('hidden');
             document.getElementById('resultsSection').classList.add('hidden');
             document.getElementById('statsBox').classList.add('hidden');
             document.getElementById('loadingState').classList.remove('hidden');
 
             preview.onload = async () => {
-                if (!model) {
-                    alert("The 98MB AI file is still downloading in your browser background. Leave this page open for 1 more minute and try clicking upload again!");
+                try {
+                    if (!model) {
+                        // Safe runtime loading recovery fallbacks
+                        model = await mobilenet.load({version: 1, alpha: 0.25});
+                    }
+
+                    const startTime = performance.now();
+                    const predictions = await model.classify(preview);
+                    const endTime = performance.now();
+                    const latency = (endTime - startTime).toFixed(0);
+
+                    const grid = document.getElementById('resultsGrid');
+                    grid.innerHTML = '';
+                    
+                    predictions.forEach(pred => {
+                        const accuracy = (pred.probability * 100).toFixed(2);
+                        const cleanTitle = pred.className.split(',')[0];
+                        
+                        const row = document.createElement('div');
+                        row.className = 'bg-slate-800 border border-slate-700 p-4 flex justify-between items-center rounded-xl shadow-md';
+                        row.innerHTML = `
+                            <div>
+                                <h3 class="font-bold text-slate-100 capitalize tracking-tight">${cleanTitle}</h3>
+                                <p class="text-[10px] text-slate-500 font-mono">Matched Node ID</p>
+                            </div>
+                            <span class="font-mono text-emerald-400 font-bold bg-emerald-950/40 px-3 py-1 rounded-md border border-emerald-800 text-sm">${accuracy}% Proximity</span>
+                        `;
+                        grid.appendChild(row);
+                    });
+
+                    document.getElementById('latencyTimer').innerText = `${latency}ms`;
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('statsBox').classList.remove('hidden');
+                    document.getElementById('resultsSection').classList.remove('hidden');
+                } catch (error) {
+                    console.error("Inference pipeline failure:", error);
+                    alert("Error evaluating image data tensor maps.");
                     document.getElementById('loadingState').classList.add('hidden');
                     document.getElementById('emptyState').classList.remove('hidden');
-                    return;
                 }
-
-                const startTime = performance.now();
-                const predictions = await model.classify(preview);
-                const endTime = performance.now();
-                const latency = (endTime - startTime).toFixed(0);
-
-                const grid = document.getElementById('resultsGrid');
-                grid.innerHTML = '';
-                
-                predictions.forEach(pred => {
-                    const accuracy = (pred.probability * 100).toFixed(2);
-                    const cleanTitle = pred.className.split(',')[0];
-                    
-                    const row = document.createElement('div');
-                    row.className = 'bg-slate-800 border border-slate-700 p-4 flex justify-between items-center rounded-xl shadow-md';
-                    row.innerHTML = `
-                        <div>
-                            <h3 class="font-bold text-slate-100 capitalize tracking-tight">${cleanTitle}</h3>
-                            <p class="text-[10px] text-slate-500 font-mono">Matched Node ID</p>
-                        </div>
-                        <span class="font-mono text-emerald-400 font-bold bg-emerald-950/40 px-3 py-1 rounded-md border border-emerald-800 text-sm">${accuracy}% Proximity</span>
-                    `;
-                    grid.appendChild(row);
-                });
-
-                document.getElementById('latencyTimer').innerText = `${latency}ms`;
-                document.getElementById('loadingState').classList.add('hidden');
-                document.getElementById('statsBox').classList.remove('hidden');
-                document.getElementById('resultsSection').classList.remove('hidden');
             };
         }
     </script>
